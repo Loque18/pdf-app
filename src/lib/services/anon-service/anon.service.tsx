@@ -2,6 +2,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import {
   AnonCtx,
   AnonServiceCtx,
@@ -18,7 +19,7 @@ export default function AnonService({
     let storedAnonId = localStorage.getItem("anonId");
 
     if (!storedAnonId) {
-      storedAnonId = crypto.randomUUID();
+      storedAnonId = uuidv4();
       localStorage.setItem("anonId", storedAnonId);
     }
 
