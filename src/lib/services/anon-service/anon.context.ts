@@ -1,7 +1,9 @@
+"use client";
+
 import { createContext, useContext } from "react";
 
 export type AnonServiceCtx = {
-  anonId: string | null;
+  anonId: string;
 };
 
 // @ts-expect-error init later

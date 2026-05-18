@@ -7,6 +7,9 @@ const client = axios.create({
   baseURL: getConfig().api_url,
 });
 
-export const api = {
-  parser: createParserApi(client),
-};
+export function getApi(anonId: string) {
+  const api = {
+    parser: createParserApi(client, anonId),
+  };
+  return api;
+}

@@ -1,4 +1,4 @@
-import type { FileSummary, JobOutput } from "@lib/api/resource.types";
+import type { JobSummary } from "@lib/api/resource.types";
 
 // ==================================================
 // REQUESTS
@@ -17,16 +17,12 @@ export type CreateParserResponse = {
   expires_at: string | null;
 };
 
-export type GetParserRequestResponseDto = {
-  parse_req: {
-    id: string;
-    status: string;
-    created_at: string;
-    expires_at: string | null;
-    error_message: string | null;
-    results: {
-      file: FileSummary;
-      output: JobOutput;
-    };
-  };
+export type RetrieveParserRequestResponse = {
+  id: string;
+  status: string;
+  created_at: string;
+  expires_at: string | null;
+  jobs: JobSummary[];
 };
+
+export type ListRequestsResponse = RetrieveParserRequestResponse[];

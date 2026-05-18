@@ -1,6 +1,4 @@
-import type { ParseJobStatus } from "../parser.service";
-
-export function getStatusTone(status: ParseJobStatus) {
+export function getStatusTone(status: string) {
   if (status === "processed") {
     return { color: "green" as const, label: "Processed" };
   }

@@ -1,32 +1,20 @@
 "use client";
-
 // lib
 import { formatDate } from "@lib/utils";
-
-// components
-import { ResultsTable } from "./_components/results-table";
-
-// context
-import { useParserContext } from "./parser.context";
-
-// sections
-import { ParserFooterSection } from "./_sections/parser-footer";
-import { ParserHeaderSection } from "./_sections/parser-header";
-
-// utils
-import { getStatusTone } from "./_utils/status-tone";
 
 // ui
 import { Tag } from "@ui/elements";
 
+// self
+import { ParserFooterSection } from "@modules/parser/_sections/parser-footer";
+import { ParserHeaderSection } from "@modules/parser/_sections/parser-header";
+import { RequestColumnSection } from "@modules/parser/_sections/request-column";
+import { useParserContext } from "@modules/parser/parser.context";
+import { getStatusTone } from "@modules/parser/_utils/status-tone";
+import { ResultsTable } from "@modules/parser/_components/results-table";
+
 export function ParserTemplate() {
-  const {
-    requests,
-    selectedRequestId,
-    selectedRequest,
-    selectedJob,
-    selectRequest,
-  } = useParserContext();
+  const { selectedRequest, selectedJob } = useParserContext();
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fafaf9_0%,#f4f4f5_100%)] text-zinc-950">
@@ -37,72 +25,12 @@ export function ParserTemplate() {
         {/* main parser workspace */}
         <section className="grid flex-1 gap-4 lg:grid-cols-[320px_360px_minmax(0,1fr)]">
           {/* parse requests column */}
-          <div className="flex min-h-[720px] flex-col overflow-hidden rounded-[28px] border border-zinc-200 bg-white">
-            <div className="border-b border-zinc-200 px-5 py-4">
-              <p className="text-lg font-semibold text-zinc-950">
-                Parse Requests
-              </p>
-              <p className="mt-1 text-sm text-zinc-500">
-                Uploads grouped by request ID and lifecycle.
-              </p>
-            </div>
-            <div className="flex-1 space-y-3 overflow-y-auto p-3">
-              {requests.map((request) => {
-                const tone = getStatusTone(request.status);
-                const isActive = request.id === selectedRequestId;
-
-                return (
-                  <button
-                    key={request.id}
-                    type="button"
-                    onClick={() => selectRequest(request.id)}
-                    className={[
-                      "w-full rounded-2xl border p-4 text-left transition-colors",
-                      isActive
-                        ? "border-blue-300 bg-blue-50"
-                        : "border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50",
-                    ].join(" ")}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-zinc-900">
-                          {request.id}
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-500">
-                          Created {formatDate(request.createdAt)}
-                        </p>
-                      </div>
-                      <Tag variant={{ color: tone.color, size: "24" }}>
-                        {tone.label}
-                      </Tag>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs text-zinc-500">
-                      <div className="rounded-xl bg-zinc-100 px-3 py-2">
-                        <span className="block text-zinc-400">PDFs</span>
-                        <strong className="text-sm font-semibold text-zinc-900">
-                          {request.jobs.length}
-                        </strong>
-                      </div>
-                      <div className="rounded-xl bg-zinc-100 px-3 py-2">
-                        <span className="block text-zinc-400">Tables</span>
-                        <strong className="text-sm font-semibold text-zinc-900">
-                          {request.jobs.reduce(
-                            (count, job) => count + job.tables.length,
-                            0,
-                          )}
-                        </strong>
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <RequestColumnSection />
 
           {/* jobs column */}
-          <div className="flex min-h-[720px] flex-col overflow-hidden rounded-[28px] border border-zinc-200 bg-white">
+          <div className="flex min-h-[720px] flex-col overflow-hidden rounded-2xl border border-zinc-200 bg-white">
             <div className="border-b border-zinc-200 px-5 py-4">
-              <p className="text-lg font-semibold text-zinc-950">Jobs</p>
+              <p className="text-lg font-semibold text-zinc-950">Files</p>
               <p className="mt-1 text-sm text-zinc-500">
                 Each PDF in the selected request becomes one job.
               </p>

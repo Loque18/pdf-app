@@ -1,12 +1,13 @@
 import type { AxiosInstance } from "axios";
-import { endpoints } from "../endpoints";
+import { endpoints } from "@lib/api/endpoints";
 import type {
   CreateParseRequest,
   CreateParserResponse,
-  GetParserRequestResponseDto,
+  ListRequestsResponse,
+  RetrieveParserRequestResponse,
 } from "@lib/api/apis/parser.dto";
 
-export function createParserApi(axios: AxiosInstance) {
+export function createParserApi(axios: AxiosInstance, anonId: string) {
   return {
     async createRequest(dto: CreateParseRequest) {
       const res = await axios<CreateParserResponse>({
@@ -15,28 +16,33 @@ export function createParserApi(axios: AxiosInstance) {
         url: endpoints.parser.create,
         headers: {
           "Content-Type": "multipart/form-data",
+          "X-client-Id": anonId,
         },
       });
 
       return res.data;
     },
 
-    async listUserRequests(anonId: string) {
-      const res = await axios<GetParserRequestResponseDto[]>({
+    async list() {
+      const res = await axios<ListRequestsResponse>({
         method: "GET",
-        url: endpoints.parser.listUserRequests,
-        data: {
-          anonId,
+        url: endpoints.parser.list,
+        headers: {
+          "X-client-Id": anonId,
         },
       });
 
       return res.data;
     },
 
-    async getRequests(requestId: string) {
-      const res = await axios.get<GetParserRequestResponseDto>(
-        `${endpoints.parser}/${requestId}`,
-      );
+    async retrieve(requestId: string) {
+      const res = await axios<RetrieveParserRequestResponse>({
+        method: "GET",
+        url: endpoints.parser.retrieve.replace(":requestId", requestId),
+        headers: {
+          "X-client-Id": anonId,
+        },
+      });
 
       return res.data;
     },

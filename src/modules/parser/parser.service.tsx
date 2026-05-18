@@ -1,61 +1,19 @@
 "use client";
 
-import { useState, type ChangeEvent, type ReactNode } from "react";
-import { parserRequestsMock } from "@lib/temp/parser";
-import { ParserContext } from "./parser.context";
-import { useAnonService } from "@/lib/services/anon-service/anon.context";
+// third party
+import { useState, type ReactNode } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { api } from "@/lib/api/api";
 
-export type TableData = {
-  header: string[];
-  rows: string[][];
-};
+// lib
+import { getApi } from "@lib/api/api";
 
-export type ParseResultFile = {
-  originalName: string;
-  url: string;
-  key: string;
-};
-
-export type ParseJobStatus = "processed" | "queued" | "processing" | "failed";
-
-export type ParseJob = {
-  id: string;
-  status: ParseJobStatus;
-  createdAt: string;
-  file: ParseResultFile;
-  tables: TableData[];
-  errorMessage?: string | null;
-};
-
-export type ParseRequest = {
-  id: string;
-  status: ParseJobStatus;
-  createdAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  errorMessage: string | null;
-  jobs: ParseJob[];
-};
+// self
+import { ParserContext } from "@modules/parser/parser.context";
+import { useAnonService } from "@lib/services/anon-service/anon.context";
 
 export const MAX_FILES_PER_REQUEST = 10;
 
-export const initialRequests: ParseRequest[] = parserRequestsMock.map(
-  (request) => ({
-    ...request,
-    jobs: request.jobs.map((job) => ({
-      ...job,
-      tables: job.tables.map((table) => ({
-        ...table,
-        header: [...table.header],
-        rows: table.rows.map((row) => [...row]),
-      })),
-    })),
-  }),
-);
-
-export function createRequestFromFiles(files: File[]): ParseRequest {
+export function createRequestFromFiles(files: File[]): any {
   const now = new Date().toISOString();
   const requestId = crypto.randomUUID();
 
@@ -83,29 +41,29 @@ export function createRequestFromFiles(files: File[]): ParseRequest {
 
 export function ParserService({ children }: { children: ReactNode }) {
   // #region state
+
   const anonSvc = useAnonService();
+
+  const [api] = useState(() => getApi(anonSvc.anonId));
 
   // #endregion
 
   // #region http req
-  const parserRequestsReq = useQuery({
+  const parseRequestReq = useQuery({
     queryKey: ["parser", "requests"],
-    queryFn: async () => api.parser.getRequests(anonSvc.anonId!),
-    enabled: !!anonSvc.anonId,
+    queryFn: async () => api.parser.list(),
   });
   // #endregion
 
   // #region selection state
 
-  const [selectedRequestId, setSelectedRequestId] = useState<
-    string | undefined
-  >();
+  const [selectedReqId, setSelectedReqId] = useState<string | undefined>();
   const [selectedJobId, setSelectedJobId] = useState<string | undefined>();
 
-  function selectRequest(requestId: string) {
-    setSelectedRequestId(requestId);
+  function selectRequest(reqId: string) {
+    setSelectedReqId(reqId);
 
-    const request = requests.find((entry) => entry.id === requestId);
+    const request = parseRequestReq.data?.find((entry) => entry.id === reqId);
     setSelectedJobId(request?.jobs[0]?.id ?? "");
   }
 
@@ -113,38 +71,22 @@ export function ParserService({ children }: { children: ReactNode }) {
     setSelectedJobId(jobId);
   }
 
-  // #endregion
-
-  const [requests, setRequests] = useState(initialRequests);
-  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
-
   const selectedRequest =
-    requests.find((request) => request.id === selectedRequestId) ??
-    requests[0] ??
+    parseRequestReq.data?.find((request) => request.id === selectedReqId) ??
     null;
 
   const jobs = selectedRequest?.jobs ?? [];
 
-  const selectedJob =
-    jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null;
+  const selectedJob = jobs.find((job) => job.id === selectedJobId) ?? null;
 
-  function handleFilesChange(event: ChangeEvent<HTMLInputElement>) {
-    const fileList = event.target.files;
+  // #endregion
 
-    if (!fileList || fileList.length === 0) {
-      return;
-    }
-
-    const files = Array.from(fileList);
-
-    if (files.length > MAX_FILES_PER_REQUEST) {
-      setUploadMessage(
-        `Only the first ${MAX_FILES_PER_REQUEST} PDFs were added to this parse request.`,
-      );
-    } else {
-      setUploadMessage(
-        `${files.length} PDF${files.length > 1 ? "s" : ""} queued in a new request.`,
-      );
+  function createRequest(files: File[]) {
+    if (files.length === 0) {
+      return {
+        ok: false,
+        message: "Select at least one PDF file before sending the request.",
+      };
     }
 
     const pdfFiles = files
@@ -154,33 +96,46 @@ export function ParserService({ children }: { children: ReactNode }) {
       .slice(0, MAX_FILES_PER_REQUEST);
 
     if (pdfFiles.length === 0) {
-      setUploadMessage("No valid PDF files were selected.");
-      event.target.value = "";
-      return;
+      return {
+        ok: false,
+        message: "Only PDF files are allowed in a parse request.",
+      };
+    }
+
+    if (pdfFiles.length !== files.length) {
+      return {
+        ok: false,
+        message: `A request can include only ${MAX_FILES_PER_REQUEST} PDF files.`,
+      };
     }
 
     const nextRequest = createRequestFromFiles(pdfFiles);
 
-    setRequests((current) => [nextRequest, ...current]);
-    setSelectedRequestId(nextRequest.id);
+    setSelectedReqId(nextRequest.id);
     setSelectedJobId(nextRequest.jobs[0]?.id ?? "");
-    event.target.value = "";
+
+    return {
+      ok: true,
+      message: `${pdfFiles.length} PDF${pdfFiles.length > 1 ? "s were" : " was"} queued successfully.`,
+    };
   }
 
   return (
     <ParserContext.Provider
       value={{
-        requests,
-        selectedRequestId,
-        selectedJobId,
-        selectedRequest,
-        selectedJob,
-        jobs,
-        uploadMessage,
-        maxFilesPerRequest: MAX_FILES_PER_REQUEST,
-        selectRequest,
-        selectJob,
-        handleFilesChange,
+        requests: {
+          parseRequestReq,
+        },
+        fn: {
+          selectRequest,
+          selectJob,
+        },
+        state: {
+          selectedRequestId: selectedReqId,
+          selectedJobId,
+          selectedRequest,
+          selectedJob,
+        },
       }}
     >
       {children}

@@ -12,14 +12,13 @@ export default function AnonService({
   children: React.ReactNode;
 }) {
   const [anonId] = useState<string>(() => {
-    const storedAnonId = localStorage.getItem("auth.anonId");
+    let anonId = localStorage.getItem("anonId");
 
-    if (storedAnonId) return storedAnonId;
-
-    const newAnonId = crypto.randomUUID();
-    localStorage.setItem("auth.anonId", newAnonId);
-
-    return newAnonId;
+    if (!anonId) {
+      anonId = crypto.randomUUID();
+      localStorage.setItem("anonId", anonId);
+    }
+    return anonId;
   });
 
   const ctx: AnonServiceCtx = {

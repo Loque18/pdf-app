@@ -1,13 +1,9 @@
 "use client";
 
-import { useId } from "react";
 import { useParserContext } from "../parser.context";
-import { Input } from "@ui/elements";
 
 export function ParserHeaderSection() {
-  const inputId = useId();
-  const { requests, uploadMessage, maxFilesPerRequest, handleFilesChange } =
-    useParserContext();
+  const { requests, maxFilesPerRequest } = useParserContext();
 
   return (
     <header className="mb-6 overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-[0_24px_80px_rgba(24,24,27,0.08)]">
@@ -28,29 +24,25 @@ export function ParserHeaderSection() {
         </div>
 
         <div className="w-full max-w-md rounded-[24px] border border-zinc-200 bg-zinc-50 p-4">
-          <label
-            htmlFor={inputId}
-            className="mb-3 block text-sm font-semibold text-zinc-900"
-          >
-            New parse request
-          </label>
-          <Input
-            id={inputId}
-            type="file"
-            accept="application/pdf,.pdf"
-            multiple
-            onChange={handleFilesChange}
-            className="cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
-          />
-          <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-            <span>Maximum {maxFilesPerRequest} PDFs per request</span>
-            <span>{requests.length} total requests</span>
+          <p className="text-sm font-semibold text-zinc-900">Workspace Summary</p>
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <div className="rounded-2xl bg-white px-4 py-3">
+              <p className="text-xs text-zinc-500">Total requests</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-950">
+                {requests.length}
+              </p>
+            </div>
+            <div className="rounded-2xl bg-white px-4 py-3">
+              <p className="text-xs text-zinc-500">Files per request</p>
+              <p className="mt-1 text-2xl font-semibold text-zinc-950">
+                {maxFilesPerRequest}
+              </p>
+            </div>
           </div>
-          {uploadMessage ? (
-            <p className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-700">
-              {uploadMessage}
-            </p>
-          ) : null}
+          <p className="mt-3 text-sm leading-6 text-zinc-600">
+            Create new requests from the first column, then inspect PDF jobs and
+            extracted tables from left to right.
+          </p>
         </div>
       </div>
     </header>

@@ -19,7 +19,6 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],
       "@ui/*": ["./src/ui/*"],
       "@lib/*": ["./src/lib/*"]
