@@ -3,6 +3,7 @@
 import { useId, useState, type ChangeEvent } from "react";
 import { Button, Input } from "@ui/elements";
 import { useParserContext } from "../parser.context";
+import { Plus } from "lucide-react";
 
 type DraftPreview = {
   file: File;
@@ -10,37 +11,22 @@ type DraftPreview = {
 
 export function RequestCreateSection() {
   const inputId = useId();
-  const { fn, maxFilesPerRequest } = useParserContext();
+  const { maxFilesPerRequest, requests } = useParserContext();
   const [isOpen, setIsOpen] = useState(false);
   const [drafts, setDrafts] = useState<DraftPreview[]>([]);
-  const [feedback, setFeedback] = useState<{
-    tone: "success" | "error";
-    message: string;
-  } | null>(null);
 
   function handleFilesChange(event: ChangeEvent<HTMLInputElement>) {
     const files = Array.from(event.target.files ?? []);
 
-    setFeedback(null);
     setDrafts(files.slice(0, maxFilesPerRequest).map((file) => ({ file })));
   }
 
   function handleToggle() {
     setIsOpen((current) => !current);
-    setFeedback(null);
   }
 
-  function handleSubmit() {
-    const result = fn.createRequest(drafts.map((draft) => draft.file));
-
-    setFeedback({
-      tone: result.ok ? "success" : "error",
-      message: result.message,
-    });
-
-    if (!result.ok) {
-      return;
-    }
+  async function handleSubmit() {
+    await requests.createRequest.exec(drafts.map((draft) => draft.file));
 
     setDrafts([]);
     setIsOpen(false);
@@ -55,8 +41,11 @@ export function RequestCreateSection() {
             Upload up to {maxFilesPerRequest} PDFs in one batch.
           </p>
         </div>
-        <Button variant={{ color: "blue", size: "32" }} onClick={handleToggle}>
-          {isOpen ? "Close" : "Add New"}
+        <Button
+          variant={{ color: isOpen ? "red" : "blue", size: "32" }}
+          onClick={handleToggle}
+        >
+          {isOpen ? "Cancel" : <Plus className="h-4 w-4" />}
         </Button>
       </div>
 
@@ -104,25 +93,31 @@ export function RequestCreateSection() {
             <p className="text-xs text-zinc-500">
               {drafts.length} / {maxFilesPerRequest} files selected
             </p>
-            <Button
-              variant={{ color: "neutral", size: "32" }}
-              onClick={handleSubmit}
-              disabled={drafts.length === 0}
-            >
-              Send Request
-            </Button>
+            {requests.createRequest.isLoading ? (
+              <p className="text-xs text-zinc-500">Creating request...</p>
+            ) : (
+              <Button
+                variant={{ color: "neutral", size: "32" }}
+                onClick={handleSubmit}
+                disabled={drafts.length === 0}
+              >
+                Extract Data
+              </Button>
+            )}
           </div>
 
-          {feedback ? (
+          {requests.createRequest.createRequestStatus != "idle" ? (
             <p
               className={[
                 "rounded-xl px-3 py-2 text-sm",
-                feedback.tone === "success"
+                requests.createRequest.createRequestStatus === "success"
                   ? "bg-emerald-50 text-emerald-700"
                   : "bg-red-50 text-red-700",
               ].join(" ")}
             >
-              {feedback.message}
+              {requests.createRequest.createRequestStatus === "success"
+                ? "Request created successfully."
+                : requests.createRequest.error}
             </p>
           ) : null}
         </div>

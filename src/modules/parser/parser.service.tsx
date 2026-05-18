@@ -13,32 +13,6 @@ import { useAnonService } from "@lib/services/anon-service/anon.context";
 
 export const MAX_FILES_PER_REQUEST = 10;
 
-export function createRequestFromFiles(files: File[]): any {
-  const now = new Date().toISOString();
-  const requestId = crypto.randomUUID();
-
-  return {
-    id: requestId,
-    status: "queued",
-    createdAt: now,
-    startedAt: null,
-    finishedAt: null,
-    errorMessage: null,
-    jobs: files.map((file) => ({
-      id: crypto.randomUUID(),
-      status: "queued",
-      createdAt: now,
-      file: {
-        originalName: file.name,
-        url: "",
-        key: `${requestId}/${file.name}`,
-      },
-      tables: [],
-      errorMessage: null,
-    })),
-  };
-}
-
 export function ParserService({ children }: { children: ReactNode }) {
   // #region state
 
@@ -83,61 +57,85 @@ export function ParserService({ children }: { children: ReactNode }) {
 
   // #endregion
 
-  function createRequest(files: File[]) {
-    if (files.length === 0) {
-      return {
-        ok: false,
-        message: "Select at least one PDF file before sending the request.",
-      };
+  // #region http post
+
+  const [createRequestLoading, setCreateRequestLoading] = useState(false);
+  const [createRequestError, setCreateRequestError] = useState<string | null>(
+    null,
+  );
+  const [createRequestStatus, setCreateRequestStatus] = useState<
+    "idle" | "success" | "error"
+  >("idle");
+
+  async function createRequest(files: File[]): Promise<void> {
+    setCreateRequestError(null);
+    setCreateRequestLoading(true);
+    try {
+      if (files.length === 0) {
+        throw new Error(
+          "Select at least one PDF file before sending the request.",
+        );
+      }
+
+      const pdfFiles = files
+        .filter(
+          (file) =>
+            file.type === "application/pdf" || file.name.endsWith(".pdf"),
+        )
+        .slice(0, MAX_FILES_PER_REQUEST);
+
+      if (pdfFiles.length === 0) {
+        throw new Error("Only PDF files are allowed.");
+      }
+
+      if (pdfFiles.length !== files.length) {
+        throw new Error(
+          "Some files were ignored because they are not valid PDF files.",
+        );
+      }
+
+      const formData = new FormData();
+      pdfFiles.forEach((file) => formData.append("files", file));
+
+      await api.parser.createRequest(formData);
+      setCreateRequestStatus("success");
+
+      parseRequestReq.refetch();
+    } catch (error) {
+      setCreateRequestError(
+        error instanceof Error
+          ? error.message
+          : "An unexpected error occurred while creating the request.",
+      );
+      setCreateRequestStatus("error");
+    } finally {
+      setCreateRequestLoading(false);
     }
-
-    const pdfFiles = files
-      .filter(
-        (file) => file.type === "application/pdf" || file.name.endsWith(".pdf"),
-      )
-      .slice(0, MAX_FILES_PER_REQUEST);
-
-    if (pdfFiles.length === 0) {
-      return {
-        ok: false,
-        message: "Only PDF files are allowed in a parse request.",
-      };
-    }
-
-    if (pdfFiles.length !== files.length) {
-      return {
-        ok: false,
-        message: `A request can include only ${MAX_FILES_PER_REQUEST} PDF files.`,
-      };
-    }
-
-    const nextRequest = createRequestFromFiles(pdfFiles);
-
-    setSelectedReqId(nextRequest.id);
-    setSelectedJobId(nextRequest.jobs[0]?.id ?? "");
-
-    return {
-      ok: true,
-      message: `${pdfFiles.length} PDF${pdfFiles.length > 1 ? "s were" : " was"} queued successfully.`,
-    };
   }
+
+  // #endregion
 
   return (
     <ParserContext.Provider
       value={{
         requests: {
           parseRequestReq,
+          createRequest: {
+            isLoading: createRequestLoading,
+            error: createRequestError,
+            exec: createRequest,
+          },
         },
         fn: {
           selectRequest,
           selectJob,
-          createRequest,
         },
         state: {
           selectedRequestId: selectedReqId,
           selectedJobId,
           selectedRequest,
           selectedJob,
+          createRequestStatus,
         },
         maxFilesPerRequest: MAX_FILES_PER_REQUEST,
       }}

@@ -1,6 +1,5 @@
 "use client";
 
-import { ParserFooterSection } from "@modules/parser/_sections/parser-footer";
 import { ParserHeaderSection } from "@modules/parser/_sections/parser-header";
 import { JobsColumnSection } from "@modules/parser/_sections/jobs-column";
 import { ResultsColumnSection } from "@modules/parser/_sections/results-column";
@@ -24,9 +23,6 @@ export function ParserTemplate() {
           {/* results column */}
           <ResultsColumnSection />
         </section>
-
-        {/* footer actions */}
-        <ParserFooterSection />
       </div>
     </main>
   );

@@ -1,11 +1,18 @@
 "use client";
 
+// third party
 import { useState } from "react";
+
+// lib
+import { filterTablePayload } from "@lib/typing/validate-table";
+
+// ui
 import { Button, Tag } from "@ui/elements";
+
+// self
 import { ResultsTable } from "@modules/parser/_components/results-table";
 import { useParserContext } from "@modules/parser/parser.context";
 import { getStatusTone } from "@modules/parser/_utils/status-tone";
-import { filterTablePayload } from "@lib/typing/validate-table";
 
 export function ResultsColumnSection() {
   const [activeTab, setActiveTab] = useState<"pdf" | "json" | "html">("pdf");

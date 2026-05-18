@@ -16,14 +16,16 @@ import { JobSummary } from "@lib/api/resource.types";
 export type ParserContextValue = {
   requests: {
     parseRequestReq: UseQueryResult<ListRequestsResponse, Error>;
+    createRequest: {
+      isLoading: boolean;
+      error: string | null;
+      createRequestStatus: "idle" | "success" | "error";
+      exec(files: File[]): Promise<void>;
+    };
   };
   fn: {
     selectRequest(reqId: string): void;
     selectJob(jobId: string): void;
-    createRequest(files: File[]): {
-      ok: boolean;
-      message: string;
-    };
   };
 
   state: {

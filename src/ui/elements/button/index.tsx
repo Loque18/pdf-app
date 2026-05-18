@@ -9,6 +9,7 @@ const colorVariants = {
     "bg-zinc-900 text-white hover:bg-zinc-800 focus-visible:ring-zinc-900",
   ghost:
     "bg-transparent text-zinc-900 hover:bg-zinc-100 focus-visible:ring-zinc-400",
+  red: "bg-red-600 text-white hover:bg-red-700 focus-visible:ring-red-600",
 } as const;
 
 const sizeVariants = {
@@ -35,7 +36,12 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         type={type}
-        className={[baseStyle, colorVariants[color], sizeVariants[size], className]
+        className={[
+          baseStyle,
+          colorVariants[color],
+          sizeVariants[size],
+          className,
+        ]
           .filter(Boolean)
           .join(" ")}
         {...props}
