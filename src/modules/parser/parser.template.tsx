@@ -1,212 +1,38 @@
 "use client";
 
-// third party
-import { useId, useState, type ChangeEvent } from "react";
-
 // lib
-import { parserRequestsMock } from "@lib/temp/parser";
 import { formatDate } from "@lib/utils";
 
 // components
 import { ResultsTable } from "./_components/results-table";
 
+// context
+import { useParserContext } from "./parser.context";
+
+// sections
+import { ParserFooterSection } from "./_sections/parser-footer";
+import { ParserHeaderSection } from "./_sections/parser-header";
+
 // utils
 import { getStatusTone } from "./_utils/status-tone";
 
 // ui
-import { Button, Input, Tag } from "@ui/elements";
-
-// local types
-type TableData = {
-  header: string[];
-  rows: string[][];
-};
-
-type ParseResultFile = {
-  originalName: string;
-  url: string;
-  key: string;
-};
-
-type ParseJob = {
-  id: string;
-  status: "processed" | "queued" | "processing" | "failed";
-  createdAt: string;
-  file: ParseResultFile;
-  tables: TableData[];
-  errorMessage?: string | null;
-};
-
-type ParseRequest = {
-  id: string;
-  status: "processed" | "queued" | "processing" | "failed";
-  createdAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  errorMessage: string | null;
-  jobs: ParseJob[];
-};
-
-const MAX_FILES_PER_REQUEST = 10;
-
-// seeded request state for the parser workspace
-const initialRequests: ParseRequest[] = parserRequestsMock.map((request) => ({
-  ...request,
-  jobs: request.jobs.map((job) => ({
-    ...job,
-    tables: job.tables.map((table) => ({
-      ...table,
-      header: [...table.header],
-      rows: table.rows.map((row) => [...row]),
-    })),
-  })),
-}));
-
-// creates a local request shell from uploaded PDFs
-function createRequestFromFiles(files: File[]): ParseRequest {
-  const now = new Date().toISOString();
-  const requestId = crypto.randomUUID();
-
-  return {
-    id: requestId,
-    status: "queued",
-    createdAt: now,
-    startedAt: null,
-    finishedAt: null,
-    errorMessage: null,
-    jobs: files.map((file) => ({
-      id: crypto.randomUUID(),
-      status: "queued",
-      createdAt: now,
-      file: {
-        originalName: file.name,
-        url: "",
-        key: `${requestId}/${file.name}`,
-      },
-      tables: [],
-      errorMessage: null,
-    })),
-  };
-}
+import { Tag } from "@ui/elements";
 
 export function ParserTemplate() {
-  // local selection and upload state
-  const inputId = useId();
-  const [requests, setRequests] = useState(initialRequests);
-  const [selectedRequestId, setSelectedRequestId] = useState(
-    initialRequests[0]?.id ?? "",
-  );
-  const [selectedJobId, setSelectedJobId] = useState(
-    initialRequests[0]?.jobs[0]?.id ?? "",
-  );
-  const [uploadMessage, setUploadMessage] = useState<string | null>(null);
-
-  const selectedRequest =
-    requests.find((request) => request.id === selectedRequestId) ??
-    requests[0] ??
-    null;
-
-  const jobs = selectedRequest?.jobs ?? [];
-
-  const selectedJob =
-    jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null;
-
-  // keeps the selected job in sync when switching requests
-  function handleSelectRequest(requestId: string) {
-    setSelectedRequestId(requestId);
-
-    const request = requests.find((entry) => entry.id === requestId);
-    setSelectedJobId(request?.jobs[0]?.id ?? "");
-  }
-
-  // creates a new local request from the uploaded PDF batch
-  function handleFilesChange(event: ChangeEvent<HTMLInputElement>) {
-    const fileList = event.target.files;
-
-    if (!fileList || fileList.length === 0) {
-      return;
-    }
-
-    const files = Array.from(fileList);
-
-    if (files.length > MAX_FILES_PER_REQUEST) {
-      setUploadMessage(
-        `Only the first ${MAX_FILES_PER_REQUEST} PDFs were added to this parse request.`,
-      );
-    } else {
-      setUploadMessage(
-        `${files.length} PDF${files.length > 1 ? "s" : ""} queued in a new request.`,
-      );
-    }
-
-    const pdfFiles = files
-      .filter(
-        (file) => file.type === "application/pdf" || file.name.endsWith(".pdf"),
-      )
-      .slice(0, MAX_FILES_PER_REQUEST);
-
-    if (pdfFiles.length === 0) {
-      setUploadMessage("No valid PDF files were selected.");
-      event.target.value = "";
-      return;
-    }
-
-    const nextRequest = createRequestFromFiles(pdfFiles);
-
-    setRequests((current) => [nextRequest, ...current]);
-    setSelectedRequestId(nextRequest.id);
-    setSelectedJobId(nextRequest.jobs[0]?.id ?? "");
-    event.target.value = "";
-  }
+  const {
+    requests,
+    selectedRequestId,
+    selectedRequest,
+    selectedJob,
+    selectRequest,
+  } = useParserContext();
 
   return (
     <main className="min-h-screen bg-[linear-gradient(180deg,#fafaf9_0%,#f4f4f5_100%)] text-zinc-950">
       <div className="mx-auto flex min-h-screen w-full max-w-[1600px] flex-col px-4 py-6 sm:px-6 lg:px-8">
         {/* header and request upload */}
-        <header className="mb-6 overflow-hidden rounded-[28px] border border-zinc-200 bg-white shadow-[0_24px_80px_rgba(24,24,27,0.08)]">
-          <div className="flex flex-col gap-6 px-6 py-6 lg:flex-row lg:items-end lg:justify-between lg:px-8">
-            <div className="max-w-3xl">
-              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.32em] text-blue-700">
-                PDF Table Parser
-              </p>
-              <h1 className="text-3xl font-semibold tracking-tight text-zinc-950 sm:text-4xl">
-                Review parse requests, track PDF jobs, and inspect every
-                extracted table.
-              </h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-zinc-600 sm:text-base">
-                Each parse request accepts up to 10 PDFs. Every PDF becomes one
-                job, and each job can return multiple tables that stay grouped
-                in the results panel.
-              </p>
-            </div>
-
-            <div className="w-full max-w-md rounded-[24px] border border-zinc-200 bg-zinc-50 p-4">
-              <label
-                htmlFor={inputId}
-                className="mb-3 block text-sm font-semibold text-zinc-900"
-              >
-                New parse request
-              </label>
-              <Input
-                id={inputId}
-                type="file"
-                accept="application/pdf,.pdf"
-                multiple
-                onChange={handleFilesChange}
-                className="cursor-pointer file:mr-3 file:rounded-md file:border-0 file:bg-blue-600 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
-              />
-              <div className="mt-3 flex items-center justify-between text-xs text-zinc-500">
-                <span>Maximum 10 PDFs per request</span>
-                <span>{requests.length} total requests</span>
-              </div>
-              {uploadMessage ? (
-                <p className="mt-3 rounded-xl bg-blue-50 px-3 py-2 text-sm text-blue-700">
-                  {uploadMessage}
-                </p>
-              ) : null}
-            </div>
-          </div>
-        </header>
+        <ParserHeaderSection />
 
         {/* main parser workspace */}
         <section className="grid flex-1 gap-4 lg:grid-cols-[320px_360px_minmax(0,1fr)]">
@@ -229,7 +55,7 @@ export function ParserTemplate() {
                   <button
                     key={request.id}
                     type="button"
-                    onClick={() => handleSelectRequest(request.id)}
+                    onClick={() => selectRequest(request.id)}
                     className={[
                       "w-full rounded-2xl border p-4 text-left transition-colors",
                       isActive
@@ -297,7 +123,7 @@ export function ParserTemplate() {
                 <p>Select a request to inspect its PDF jobs.</p>
               )}
             </div>
-            <div className="flex-1 space-y-3 overflow-y-auto p-3">
+            {/* <div className="flex-1 space-y-3 overflow-y-auto p-3">
               {jobs.length > 0 ? (
                 jobs.map((job) => {
                   const tone = getStatusTone(job.status);
@@ -307,7 +133,7 @@ export function ParserTemplate() {
                     <button
                       key={job.id}
                       type="button"
-                      onClick={() => setSelectedJobId(job.id)}
+                      onClick={() => selectJob(job.id)}
                       className={[
                         "w-full rounded-2xl border p-4 text-left transition-colors",
                         isActive
@@ -340,7 +166,7 @@ export function ParserTemplate() {
                   No jobs in this request yet.
                 </div>
               )}
-            </div>
+            </div> */}
           </div>
 
           {/* results column */}
@@ -421,15 +247,7 @@ export function ParserTemplate() {
         </section>
 
         {/* footer actions */}
-        <footer className="mt-4 flex flex-col gap-3 rounded-[24px] border border-zinc-200 bg-white px-5 py-4 text-sm text-zinc-500 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            Template only. Hook your parser API into request creation and job
-            updates next.
-          </p>
-          <Button variant={{ color: "ghost", size: "40" }}>
-            Connect parser service
-          </Button>
-        </footer>
+        <ParserFooterSection />
       </div>
     </main>
   );

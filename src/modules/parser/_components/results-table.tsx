@@ -1,9 +1,8 @@
+import type { TableData } from "../parser.service";
+
 type ResultsTableProps = {
   index: number;
-  table: {
-    header: string[];
-    rows: string[][];
-  };
+  table: TableData;
 };
 
 export function ResultsTable({ index, table }: ResultsTableProps) {

@@ -4,7 +4,7 @@ import type {
   CreateParseRequest,
   CreateParserResponse,
   GetParserRequestResponseDto,
-} from "./parser.dto";
+} from "@lib/api/apis/parser.dto";
 
 export function createParserApi(axios: AxiosInstance) {
   return {
@@ -12,7 +12,7 @@ export function createParserApi(axios: AxiosInstance) {
       const res = await axios<CreateParserResponse>({
         method: "POST",
         data: dto,
-        url: endpoints.parser,
+        url: endpoints.parser.create,
         headers: {
           "Content-Type": "multipart/form-data",
         },
@@ -21,7 +21,19 @@ export function createParserApi(axios: AxiosInstance) {
       return res.data;
     },
 
-    async getRequest(requestId: string) {
+    async listUserRequests(anonId: string) {
+      const res = await axios<GetParserRequestResponseDto[]>({
+        method: "GET",
+        url: endpoints.parser.listUserRequests,
+        data: {
+          anonId,
+        },
+      });
+
+      return res.data;
+    },
+
+    async getRequests(requestId: string) {
       const res = await axios.get<GetParserRequestResponseDto>(
         `${endpoints.parser}/${requestId}`,
       );

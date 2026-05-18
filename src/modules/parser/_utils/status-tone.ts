@@ -1,6 +1,6 @@
-type ParserStatus = "processed" | "queued" | "processing" | "failed";
+import type { ParseJobStatus } from "../parser.service";
 
-export function getStatusTone(status: ParserStatus) {
+export function getStatusTone(status: ParseJobStatus) {
   if (status === "processed") {
     return { color: "green" as const, label: "Processed" };
   }

@@ -30,3 +30,19 @@ export type ParserRequestResource = {
   error_message: string | null;
   results: ParserResultResource[];
 };
+
+export type Table = {
+  header: string[];
+  rows: string[][];
+};
+
+export type FileSummary = {
+  original_name: string;
+  url: string;
+  key: string;
+};
+
+export type JobOutput = {
+  id: number;
+  payload: Table[];
+};
