@@ -1,3 +1,5 @@
+import { ParserTemplate } from "./parser.template";
+
 export default function ParserPage() {
-  return <main />;
+  return <ParserTemplate />;
 }
