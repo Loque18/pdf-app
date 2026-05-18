@@ -46,35 +46,61 @@ export function ResultsColumnSection() {
           </div>
 
           <div className="flex-1 overflow-y-auto p-4">
-            {tables.length > 0 ? (
-              <div className="space-y-4">
-                {tables.map((table, index) => (
-                  <ResultsTable
-                    key={`${selectedJob.id}-${index}`}
-                    index={index}
-                    table={table}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="flex h-full min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center">
-                <div>
-                  <p className="text-base font-semibold text-zinc-900">
-                    No extracted tables yet
+            <div className="space-y-4">
+              <section className="overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+                <header className="border-b border-zinc-200 px-4 py-3">
+                  <p className="text-sm font-semibold text-zinc-900">
+                    PDF Preview
                   </p>
-                  <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
-                    This job has not produced table output yet. Once parsing
-                    finishes, every extracted table for this PDF will appear
-                    here.
+                  <p className="text-xs text-zinc-500">
+                    {selectedJob.file.url}
                   </p>
-                  {/* {selectedJob.errorMessage ? (
-                    <p className="mt-3 text-sm text-red-600">
-                      {selectedJob.errorMessage}
-                    </p>
-                  ) : null} */}
+                </header>
+                <div className="h-[420px] bg-zinc-100">
+                  <object
+                    data={
+                      process.env.NEXT_PUBLIC_API_URL + selectedJob.file.url
+                    }
+                    type="application/pdf"
+                    className="h-full w-full"
+                  >
+                    <div className="flex h-full items-center justify-center p-6 text-center text-sm text-zinc-500">
+                      This PDF could not be rendered in the embedded viewer.
+                    </div>
+                  </object>
                 </div>
-              </div>
-            )}
+              </section>
+
+              {tables.length > 0 ? (
+                <div className="space-y-4">
+                  {tables.map((table, index) => (
+                    <ResultsTable
+                      key={`${selectedJob.id}-${index}`}
+                      index={index}
+                      table={table}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="flex min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-zinc-200 bg-zinc-50 p-8 text-center">
+                  <div>
+                    <p className="text-base font-semibold text-zinc-900">
+                      No extracted tables yet
+                    </p>
+                    <p className="mt-2 max-w-md text-sm leading-6 text-zinc-500">
+                      This job has not produced table output yet. Once parsing
+                      finishes, every extracted table for this PDF will appear
+                      here.
+                    </p>
+                    {/* {selectedJob.errorMessage ? (
+                      <p className="mt-3 text-sm text-red-600">
+                        {selectedJob.errorMessage}
+                      </p>
+                    ) : null} */}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </>
       ) : (
