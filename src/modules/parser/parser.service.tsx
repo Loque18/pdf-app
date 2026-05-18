@@ -124,6 +124,7 @@ export function ParserService({ children }: { children: ReactNode }) {
             isLoading: createRequestLoading,
             error: createRequestError,
             exec: createRequest,
+            createRequestStatus,
           },
         },
         fn: {
@@ -135,7 +136,6 @@ export function ParserService({ children }: { children: ReactNode }) {
           selectedJobId,
           selectedRequest,
           selectedJob,
-          createRequestStatus,
         },
         maxFilesPerRequest: MAX_FILES_PER_REQUEST,
       }}

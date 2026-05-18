@@ -70,7 +70,9 @@ export function JobsColumnSection() {
 
                 <div className="mt-4 flex items-center justify-between rounded-xl bg-zinc-100 px-3 py-2 text-xs text-zinc-500">
                   <span>{formatDate(job.created_at)}</span>
-                  <span>{job.output?.payload?.length ?? 0} result blocks</span>
+                  <span>
+                    {job.output?.payload?.tables?.length ?? 0} result blocks
+                  </span>
                 </div>
               </button>
             );
