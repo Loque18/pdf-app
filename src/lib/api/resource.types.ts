@@ -15,7 +15,7 @@ export type FileSummary = {
 
 export type JobOutput = {
   id: number;
-  payload: any[];
+  payload: { tables: unknown[] };
 };
 
 export type JobSummary = {

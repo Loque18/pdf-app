@@ -10,7 +10,7 @@ type DraftPreview = {
 
 export function RequestCreateSection() {
   const inputId = useId();
-  const { createRequest, maxFilesPerRequest } = useParserContext();
+  const { fn, maxFilesPerRequest } = useParserContext();
   const [isOpen, setIsOpen] = useState(false);
   const [drafts, setDrafts] = useState<DraftPreview[]>([]);
   const [feedback, setFeedback] = useState<{
@@ -31,7 +31,7 @@ export function RequestCreateSection() {
   }
 
   function handleSubmit() {
-    const result = createRequest(drafts.map((draft) => draft.file));
+    const result = fn.createRequest(drafts.map((draft) => draft.file));
 
     setFeedback({
       tone: result.ok ? "success" : "error",

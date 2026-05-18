@@ -52,6 +52,8 @@ export function ParserService({ children }: { children: ReactNode }) {
   const parseRequestReq = useQuery({
     queryKey: ["parser", "requests"],
     queryFn: async () => api.parser.list(),
+    refetchInterval: 5000,
+    refetchIntervalInBackground: true,
   });
   // #endregion
 
@@ -129,6 +131,7 @@ export function ParserService({ children }: { children: ReactNode }) {
         fn: {
           selectRequest,
           selectJob,
+          createRequest,
         },
         state: {
           selectedRequestId: selectedReqId,
@@ -136,6 +139,7 @@ export function ParserService({ children }: { children: ReactNode }) {
           selectedRequest,
           selectedJob,
         },
+        maxFilesPerRequest: MAX_FILES_PER_REQUEST,
       }}
     >
       {children}

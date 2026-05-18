@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   AnonCtx,
   AnonServiceCtx,
@@ -11,15 +11,20 @@ export default function AnonService({
 }: {
   children: React.ReactNode;
 }) {
-  const [anonId] = useState<string>(() => {
-    let anonId = localStorage.getItem("anonId");
+  const [anonId, setAnonId] = useState<string | null>(null);
 
-    if (!anonId) {
-      anonId = crypto.randomUUID();
-      localStorage.setItem("anonId", anonId);
+  useEffect(() => {
+    let storedAnonId = localStorage.getItem("anonId");
+
+    if (!storedAnonId) {
+      storedAnonId = crypto.randomUUID();
+      localStorage.setItem("anonId", storedAnonId);
     }
-    return anonId;
-  });
+
+    setAnonId(storedAnonId);
+  }, []);
+
+  if (!anonId) return null;
 
   const ctx: AnonServiceCtx = {
     anonId,

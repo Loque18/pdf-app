@@ -20,6 +20,10 @@ export type ParserContextValue = {
   fn: {
     selectRequest(reqId: string): void;
     selectJob(jobId: string): void;
+    createRequest(files: File[]): {
+      ok: boolean;
+      message: string;
+    };
   };
 
   state: {
@@ -29,19 +33,7 @@ export type ParserContextValue = {
     selectedRequest: RetrieveParserRequestResponse | null;
     selectedJob: JobSummary | null;
   };
-
-  // selectedRequestId: string;
-  // selectedJobId: string;
-  // selectedRequest: ParseRequest | null;
-  // selectedJob: ParseRequest["jobs"][number] | null;
-  // jobs: ParseRequest["jobs"];
-  // maxFilesPerRequest: number;
-  // selectRequest: (requestId: string) => void;
-  // selectJob: (jobId: string) => void;
-  // createRequest: (files: File[]) => {
-  //   ok: boolean;
-  //   message: string;
-  // };
+  maxFilesPerRequest: number;
 };
 
 export const ParserContext = createContext<ParserContextValue | null>(null);

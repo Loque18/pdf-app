@@ -1,8 +1,8 @@
-import type { TableData } from "../parser.service";
+import type { Table } from "@lib/api/resource.types";
 
 type ResultsTableProps = {
   index: number;
-  table: TableData;
+  table: Table;
 };
 
 export function ResultsTable({ index, table }: ResultsTableProps) {
